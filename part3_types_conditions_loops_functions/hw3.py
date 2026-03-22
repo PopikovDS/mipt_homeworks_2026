@@ -128,9 +128,6 @@ def all_categories_str() -> str:
 def parse_amount(amount_str: str) -> float:
     return float(amount_str.replace(",", "."))
 
-
-
-
 def income_handler(amount: float, income_date: str) -> str:
     dt = extract_date(income_date)
 
