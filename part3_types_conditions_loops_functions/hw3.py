@@ -15,6 +15,7 @@ DATE_FRAGMENTS = 3
 DAY_INDEX = 0
 MONTH_INDEX = 1
 YEAR_INDEX = 2
+COST_CATEGORIES_ARGS = 2
 
 MONTHS_NUMBER = 12
 FEBRUARY_NUMBER = 2
@@ -66,7 +67,7 @@ expenses: list[ExpenseDict] = []
 def is_leap_year(year: int) -> bool:
     if year % 4 != 0 and year > 0:
         return False
-    elif year % 100 != 0:
+    if year % 100 != 0:
         return True
     return year % 400 == 0
 
@@ -106,11 +107,11 @@ def is_valid_category(category_string: str) -> bool:
     return main in EXPENSE_CATEGORIES and sub in EXPENSE_CATEGORIES[main]
 
 def all_categories_str() -> str:
-    lines = []
-    for main, subs in EXPENSE_CATEGORIES.items():
-        for sub in subs:
-            lines.append(f"{main}::{sub}")
-    return "\n".join(lines)
+    return "\n".join(
+        f"{main}::{sub}"
+        for main, subs in EXPENSE_CATEGORIES.items()
+        for sub in subs
+    )
 
 def parse_amount(amount_string: str) -> float:
     return float(amount_string.replace(",", "."))
@@ -178,7 +179,7 @@ def stats_handler(report_date: str) -> str:
     if target_date is None:
         return INCORRECT_DATE_MSG
 
-    target_day, target_month, target_year = target_date
+    _, target_month, target_year = target_date
 
     total_capital = 0.0
     month_income = 0.0
@@ -232,7 +233,7 @@ def process_income(command_parts: list[str]) -> None:
     print(income_handler(amount_value, command_parts[2]))
 
 def process_cost(command_parts: list[str]) -> None:
-    if len(command_parts) == 2 and command_parts[1] == CMD_CATEGORIES:
+    if len(command_parts) == COST_CATEGORIES_ARGS and command_parts[1] == CMD_CATEGORIES:
         print(all_categories_str())
         return
 
@@ -283,7 +284,6 @@ def dispatch_command(command_parts: list[str]) -> None:
         print(UNKNOWN_COMMAND_MSG)
 
 def main() -> None:
-
     while True:
         user_line = input()
         if not user_line:
