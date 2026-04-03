@@ -60,6 +60,9 @@ financial_transactions_storage: list[dict[str, Any]] = []
 incomes: list[IncomeDict] = []
 expenses: list[ExpenseDict] = []
 
+IncomeData = tuple[float, float]
+ExpenseData = tuple[float, float, dict[str, float]]
+
 
 def is_leap_year(year: int) -> bool:
     if year % 4 != 0 and year > 0:
@@ -278,19 +281,19 @@ def _print_stats_body(
     print()
 
 
-def _get_income_data(target):
+def _get_income_data(target: tuple[int, int, int]) -> IncomeData:
     month, year = _get_target_month_year(target)
     return _calc_income_total(target, month, year)
 
 
-def _get_expense_data(target):
+def _get_expense_data(target: tuple[int, int, int]) -> ExpenseData:
     month, year = _get_target_month_year(target)
-    cats = {}
+    cats: dict[str, float] = {}
     exp_total, exp_month = _calc_expense_total(target, month, year, cats)
     return exp_total, exp_month, cats
 
 
-def _print_stats_only(report_date, income_result, expense_result):
+def _print_stats_only(report_date: str, income_result: IncomeData, expense_result: ExpenseData) -> None:
     _print_stats_body(
         report_date,
         income_result[0] - expense_result[0],
@@ -300,7 +303,7 @@ def _print_stats_only(report_date, income_result, expense_result):
     )
 
 
-def _return_with_cats(cats, report_date):
+def _return_with_cats(cats: dict[str, float], report_date: str) -> str:
     _print_category_details(cats)
     return f"Statistic for {report_date}"
 
