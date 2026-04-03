@@ -19,6 +19,7 @@ YEAR_INDEX = 2
 MONTHS_NUMBER = 12
 FEBRUARY_NUMBER = 2
 FEBRUARY_DAYS_COUNT = 29
+FEBRUARY_DAYS_NORMAL = 28
 
 MONTH_DAYS = (
     31, 28, 31, 30, 31, 30,
@@ -50,7 +51,7 @@ EXPENSE_CATEGORIES = {
     "Clothing": ("Outerwear", "Casual", "Shoes", "Accessories"),
     "Education": ("Courses", "Books", "Tutors"),
     "Communications": ("Mobile", "Internet", "Subscriptions"),
-    "Other": (),
+    "Other": ("SomeCategory", "SomeOtherCategory"),
 }
 
 
@@ -63,43 +64,29 @@ expenses: list[ExpenseDict] = []
 
 
 def is_leap_year(year: int) -> bool:
-    """
-    Для заданного года определяет: високосный (True) или невисокосный (False).
-
-    :param int year: Проверяемый год
-    :return: Значение високосности.
-    :rtype: bool
-    """
     if year % 4 != 0 and year > 0:
         return False
     elif year % 100 != 0:
         return True
     return year % 400 == 0
 
-def extract_date(maybe_dt: str) -> tuple[int, int, int] | None:
-    """
-    Парсит дату формата DD-MM-YYYY из строки.
-
-    :param str maybe_dt: Проверяемая строка
-    :return: typle формата (день, месяц, год) или None, если дата неправильная.
-    :rtype: tuple[int, int, int] | None
-    """
-    if len(maybe_dt) != DATE_LEN:
+def extract_date(maybe_date: str) -> tuple[int, int, int] | None:
+    if len(maybe_date) != DATE_LEN:
         return None
-    if maybe_dt[2] != "-" or maybe_dt[5] != "-":
+    if maybe_date[2] != "-" or maybe_date[5] != "-":
         return None
 
-    d, m, y = maybe_dt[:2], maybe_dt[3:5], maybe_dt[6:]
+    day_str, month_str, year_str = maybe_date[:2], maybe_date[3:5], maybe_date[6:]
 
-    if not (d.isdigit() and m.isdigit() and y.isdigit()):
+    if not (day_str.isdigit() and month_str.isdigit() and year_str.isdigit()):
         return None
 
-    day, month, year = int(d), int(m), int(y)
+    day, month, year = int(day_str), int(month_str), int(year_str)
 
     if not (1 <= month <= MONTHS_NUMBER):
         return None
 
-    feb = FEBRUARY_DAYS_COUNT if is_leap_year(year) else 28
+    feb = FEBRUARY_DAYS_COUNT if is_leap_year(year) else FEBRUARY_DAYS_NORMAL
     month_days = list(MONTH_DAYS)
     month_days[FEBRUARY_NUMBER - 1] = feb
 
@@ -108,14 +95,14 @@ def extract_date(maybe_dt: str) -> tuple[int, int, int] | None:
 
     return day, month, year
 
-def date_leq(d1: tuple[int, int, int], d2: tuple[int, int, int]) -> bool:
-    return (d1[YEAR_INDEX], d1[MONTH_INDEX], d1[DAY_INDEX]) <= \
-           (d2[YEAR_INDEX], d2[MONTH_INDEX], d2[DAY_INDEX])
+def date_less_or_equal(date_one: tuple[int, int, int], date_two: tuple[int, int, int]) -> bool:
+    return (date_one[YEAR_INDEX], date_one[MONTH_INDEX], date_one[DAY_INDEX]) <= \
+           (date_two[YEAR_INDEX], date_two[MONTH_INDEX], date_two[DAY_INDEX])
 
-def is_valid_category(cat: str) -> bool:
-    if "::" not in cat:
+def is_valid_category(category_string: str) -> bool:
+    if "::" not in category_string:
         return False
-    main, sub = cat.split("::", 1)
+    main, sub = category_string.split("::", 1)
     return main in EXPENSE_CATEGORIES and sub in EXPENSE_CATEGORIES[main]
 
 def all_categories_str() -> str:
@@ -125,13 +112,13 @@ def all_categories_str() -> str:
             lines.append(f"{main}::{sub}")
     return "\n".join(lines)
 
-def parse_amount(amount_str: str) -> float:
-    return float(amount_str.replace(",", "."))
+def parse_amount(amount_string: str) -> float:
+    return float(amount_string.replace(",", "."))
 
 def income_handler(amount: float, income_date: str) -> str:
-    dt = extract_date(income_date)
+    date_tuple = extract_date(income_date)
 
-    if dt is None:
+    if date_tuple is None:
         financial_transactions_storage.append({})
         return INCORRECT_DATE_MSG
 
@@ -141,12 +128,12 @@ def income_handler(amount: float, income_date: str) -> str:
 
     financial_transactions_storage.append({
         AMOUNT_KEY: amount,
-        DATE_KEY: dt,
+        DATE_KEY: date_tuple,
     })
 
     incomes.append({
         AMOUNT_KEY: amount,
-        DATE_KEY: dt
+        DATE_KEY: date_tuple
     })
 
     return OP_SUCCESS_MSG
@@ -156,9 +143,9 @@ def cost_handler(category_name: str, amount: float, income_date: str) -> str:
         financial_transactions_storage.append({})
         return NOT_EXISTS_CATEGORY
 
-    dt = extract_date(income_date)
+    date_tuple = extract_date(income_date)
 
-    if dt is None:
+    if date_tuple is None:
         financial_transactions_storage.append({})
         return INCORRECT_DATE_MSG
 
@@ -169,7 +156,7 @@ def cost_handler(category_name: str, amount: float, income_date: str) -> str:
     financial_transactions_storage.append({
         "category": category_name,
         AMOUNT_KEY: amount,
-        DATE_KEY: dt,
+        DATE_KEY: date_tuple,
     })
 
     main, sub = category_name.split("::", 1)
@@ -178,7 +165,7 @@ def cost_handler(category_name: str, amount: float, income_date: str) -> str:
         MAIN_CAT_KEY: main,
         SUB_CAT_KEY: sub,
         AMOUNT_KEY: amount,
-        DATE_KEY: dt
+        DATE_KEY: date_tuple
     })
 
     return OP_SUCCESS_MSG
@@ -187,29 +174,29 @@ def cost_categories_handler() -> str:
     return all_categories_str()
 
 def stats_handler(report_date: str) -> str:
-    dt = extract_date(report_date)
-    if dt is None:
+    target_date = extract_date(report_date)
+    if target_date is None:
         return INCORRECT_DATE_MSG
 
-    day_r, month_r, year_r = dt
+    target_day, target_month, target_year = target_date
 
     total_capital = 0.0
     month_income = 0.0
     month_expenses = 0.0
-    cats: dict[str, float] = {}
+    categories: dict[str, float] = {}
 
     for inc in incomes:
-        if date_leq(inc[DATE_KEY], dt):
+        if date_less_or_equal(inc[DATE_KEY], target_date):
             total_capital += inc[AMOUNT_KEY]
-        if inc[DATE_KEY][MONTH_INDEX] == month_r and inc[DATE_KEY][YEAR_INDEX] == year_r:
+        if inc[DATE_KEY][MONTH_INDEX] == target_month and inc[DATE_KEY][YEAR_INDEX] == target_year:
             month_income += inc[AMOUNT_KEY]
 
     for exp in expenses:
-        if date_leq(exp[DATE_KEY], dt):
+        if date_less_or_equal(exp[DATE_KEY], target_date):
             total_capital -= exp[AMOUNT_KEY]
-        if exp[DATE_KEY][MONTH_INDEX] == month_r and exp[DATE_KEY][YEAR_INDEX] == year_r:
+        if exp[DATE_KEY][MONTH_INDEX] == target_month and exp[DATE_KEY][YEAR_INDEX] == target_year:
             month_expenses += exp[AMOUNT_KEY]
-            cats[exp[SUB_CAT_KEY]] = cats.get(exp[SUB_CAT_KEY], 0.0) + exp[AMOUNT_KEY]
+            categories[exp[SUB_CAT_KEY]] = categories.get(exp[SUB_CAT_KEY], 0.0) + exp[AMOUNT_KEY]
 
     month_result = month_income - month_expenses
 
@@ -224,86 +211,90 @@ def stats_handler(report_date: str) -> str:
     print()
     print("Details (category: amount):")
 
-    for idx, name in enumerate(sorted(cats.keys()), start=1):
-        print(f"{idx}. {name}: {cats[name]}")
+    for index, category_name in enumerate(sorted(categories.keys()), start=1):
+        print(f"{index}. {category_name}: {categories[category_name]}")
     return f"Statistic for {report_date}"
 
-def process_income(parts: list[str]) -> None:
-    if len(parts) != INCOME_ARGS:
+def process_income(command_parts: list[str]) -> None:
+    if len(command_parts) != INCOME_ARGS:
         print(UNKNOWN_COMMAND_MSG)
         return
 
-    amount = parse_amount(parts[1])
-    if amount <= 0:
+    amount_value = parse_amount(command_parts[1])
+    if amount_value <= 0:
         print(NONPOSITIVE_VALUE_MSG)
         return
 
-    print(income_handler(amount, parts[2]))
+    if extract_date(command_parts[2]) is None:
+        print(INCORRECT_DATE_MSG)
+        return
 
-def process_cost(parts: list[str]) -> None:
-    if len(parts) == 2 and parts[1] == CMD_CATEGORIES:
+    print(income_handler(amount_value, command_parts[2]))
+
+def process_cost(command_parts: list[str]) -> None:
+    if len(command_parts) == 2 and command_parts[1] == CMD_CATEGORIES:
         print(all_categories_str())
         return
 
-    if len(parts) != COST_ARGS:
+    if len(command_parts) != COST_ARGS:
         print(UNKNOWN_COMMAND_MSG)
         return
 
-    category, amount_str, date_str = parts[1], parts[2], parts[3]
+    category_name, amount_string, date_string = command_parts[1], command_parts[2], command_parts[3]
 
-    if not is_valid_category(category):
+    if not is_valid_category(category_name):
         print(NOT_EXISTS_CATEGORY)
         print(all_categories_str())
         return
 
-    amount = parse_amount(amount_str)
-    if amount <= 0:
+    amount_value = parse_amount(amount_string)
+    if amount_value <= 0:
         print(NONPOSITIVE_VALUE_MSG)
         return
 
-    print(cost_handler(category, amount, date_str))
-
-def process_stats(parts: list[str]) -> None:
-    if len(parts) != STATS_ARGS:
-        print(UNKNOWN_COMMAND_MSG)
-        return
-
-    date_str = parts[1]
-    if extract_date(date_str) is None:
+    if extract_date(date_string) is None:
         print(INCORRECT_DATE_MSG)
         return
 
-    stats_handler(date_str)
+    print(cost_handler(category_name, amount_value, date_string))
 
-def dispatch_command(parts: list[str]) -> None:
-    cmd = parts[0]
+def process_stats(command_parts: list[str]) -> None:
+    if len(command_parts) != STATS_ARGS:
+        print(UNKNOWN_COMMAND_MSG)
+        return
 
-    if cmd == CMD_INCOME:
-        process_income(parts)
-    elif cmd == CMD_COST:
-        process_cost(parts)
-    elif cmd == CMD_STATS:
-        process_stats(parts)
+    date_string = command_parts[1]
+    if extract_date(date_string) is None:
+        print(INCORRECT_DATE_MSG)
+        return
+
+    stats_handler(date_string)
+
+def dispatch_command(command_parts: list[str]) -> None:
+    command = command_parts[0]
+
+    if command == CMD_INCOME:
+        process_income(command_parts)
+    elif command == CMD_COST:
+        process_cost(command_parts)
+    elif command == CMD_STATS:
+        process_stats(command_parts)
     else:
         print(UNKNOWN_COMMAND_MSG)
 
 def main() -> None:
-    global incomes, expenses
-
-    incomes = []
-    expenses = []
 
     while True:
-        try:
-            line = input().strip()
-        except EOFError:
+        user_line = input()
+        if not user_line:
             break
 
-        if not line:
+        user_line = user_line.strip()
+        if not user_line:
             continue
 
-        parts = line.split()
-        dispatch_command(parts)
+        command_parts = user_line.split()
+        dispatch_command(command_parts)
 
 
 if __name__ == "__main__":
