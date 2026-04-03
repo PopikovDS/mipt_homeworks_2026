@@ -42,7 +42,6 @@ INCORRECT_DATE_MSG = "Invalid date!"
 NOT_EXISTS_CATEGORY = "Category not exists!"
 OP_SUCCESS_MSG = "Added"
 
-
 EXPENSE_CATEGORIES = {
     "Food": ("Supermarket", "Restaurants", "FastFood", "Coffee", "Delivery"),
     "Transport": ("Taxi", "Public transport", "Gas", "Car service"),
@@ -54,7 +53,6 @@ EXPENSE_CATEGORIES = {
     "Communications": ("Mobile", "Internet", "Subscriptions"),
     "Other": ("SomeCategory", "SomeOtherCategory"),
 }
-
 
 IncomeDict = dict[str, Any]
 ExpenseDict = dict[str, Any]
@@ -71,35 +69,53 @@ def is_leap_year(year: int) -> bool:
     return year % 400 == 0
 
 
+def _get_month_days(month: int, year: int) -> int:
+    if month == FEBRUARY_NUMBER:
+        return FEBRUARY_DAYS_COUNT if is_leap_year(year) else FEBRUARY_DAYS_NORMAL
+    if month in (4, 6, 9, 11):
+        return 30
+    return 31
+
+
 def _validate_date_parts(day: int, month: int, year: int) -> bool:
     if not (1 <= month <= MONTHS_NUMBER):
         return False
-    feb = FEBRUARY_DAYS_COUNT if is_leap_year(year) else FEBRUARY_DAYS_NORMAL
-    month_days = list(MONTH_DAYS)
-    month_days[FEBRUARY_NUMBER - 1] = feb
-    return 1 <= day <= month_days[month - 1]
+    max_day = _get_month_days(month, year)
+    return 1 <= day <= max_day
+
+
+def _check_date_format(maybe_date: str) -> bool:
+    if len(maybe_date) != DATE_LEN:
+        return False
+    return maybe_date[2] == "-" and maybe_date[5] == "-"
+
+
+def _to_int_or_none(val: str) -> int | None:
+    if val.isdigit():
+        return int(val)
+    return None
 
 
 def extract_date(maybe_date: str) -> tuple[int, int, int] | None:
-    if len(maybe_date) != DATE_LEN or maybe_date[2] != "-" or maybe_date[5] != "-":
+    if not _check_date_format(maybe_date):
         return None
 
-    day_str, month_str, year_str = maybe_date[:2], maybe_date[3:5], maybe_date[6:]
+    day_val = _to_int_or_none(maybe_date[:2])
+    month_val = _to_int_or_none(maybe_date[3:5])
+    year_val = _to_int_or_none(maybe_date[6:])
 
-    if not (day_str.isdigit() and month_str.isdigit() and year_str.isdigit()):
+    if day_val is None or month_val is None or year_val is None:
         return None
 
-    day, month, year = int(day_str), int(month_str), int(year_str)
-
-    if not _validate_date_parts(day, month, year):
+    if not _validate_date_parts(day_val, month_val, year_val):
         return None
 
-    return (day, month, year)
+    return (day_val, month_val, year_val)
 
 
 def date_less_or_equal(
-    date_one: tuple[int, int, int],
-    date_two: tuple[int, int, int],
+        date_one: tuple[int, int, int],
+        date_two: tuple[int, int, int],
 ) -> bool:
     left = (date_one[YEAR_INDEX], date_one[MONTH_INDEX], date_one[DAY_INDEX])
     right = (date_two[YEAR_INDEX], date_two[MONTH_INDEX], date_two[DAY_INDEX])
@@ -185,17 +201,24 @@ def cost_categories_handler() -> str:
     return all_categories_str()
 
 
-def _process_income_stats(target_date: tuple[int, int, int]) -> tuple[float, float]:
-    total = 0.0
-    month_total = 0.0
-    _, target_month, target_year = target_date
+def _get_target_month_year(target_date: tuple[int, int, int]) -> tuple[int, int]:
+    return target_date[1], target_date[2]
+
+
+def _calc_income_total(
+        target_date: tuple[int, int, int],
+        target_month: int,
+        target_year: int,
+) -> tuple[float, float]:
+    total = 0
+    month_total = 0
 
     for inc in incomes:
         if date_less_or_equal(inc[DATE_KEY], target_date):
             total += inc[AMOUNT_KEY]
         same_month = (
-            inc[DATE_KEY][MONTH_INDEX] == target_month and
-            inc[DATE_KEY][YEAR_INDEX] == target_year
+                inc[DATE_KEY][MONTH_INDEX] == target_month and
+                inc[DATE_KEY][YEAR_INDEX] == target_year
         )
         if same_month:
             month_total += inc[AMOUNT_KEY]
@@ -203,55 +226,95 @@ def _process_income_stats(target_date: tuple[int, int, int]) -> tuple[float, flo
     return total, month_total
 
 
-def _process_expense_stats(target_date: tuple[int, int, int]) -> tuple[float, float, dict[str, float]]:
-    total = 0.0
-    month_total = 0.0
-    categories: dict[str, float] = {}
-    _, target_month, target_year = target_date
+def _calc_expense_total(
+        target_date: tuple[int, int, int],
+        target_month: int,
+        target_year: int,
+        categories: dict[str, float],
+) -> tuple[float, float]:
+    total = 0
+    month_total = 0
 
     for exp in expenses:
         if date_less_or_equal(exp[DATE_KEY], target_date):
             total += exp[AMOUNT_KEY]
         same_month = (
-            exp[DATE_KEY][MONTH_INDEX] == target_month and
-            exp[DATE_KEY][YEAR_INDEX] == target_year
+                exp[DATE_KEY][MONTH_INDEX] == target_month and
+                exp[DATE_KEY][YEAR_INDEX] == target_year
         )
         if same_month:
             month_total += exp[AMOUNT_KEY]
             cat_key = exp[SUB_CAT_KEY]
-            categories[cat_key] = categories.get(cat_key, 0.0) + exp[AMOUNT_KEY]
+            categories[cat_key] = categories.get(cat_key, 0) + exp[AMOUNT_KEY]
 
-    return total, month_total, categories
+    return total, month_total
 
 
-def stats_handler(report_date: str) -> str:
-    target_date = extract_date(report_date)
-    if target_date is None:
-        return INCORRECT_DATE_MSG
+def _print_category_details(categories: dict[str, float]) -> None:
+    print("Details (category: amount):")
+    for idx, name in enumerate(sorted(categories.keys()), 1):
+        print(f"{idx}. {name}: {categories[name]}")
 
-    total_income, month_income = _process_income_stats(target_date)
-    total_expense, month_expenses, categories = _process_expense_stats(target_date)
 
-    total_capital = total_income - total_expense
-    month_result = month_income - month_expenses
-
-    print(f"Your statistics as of {report_date}:")
-    print(f"Total capital: {total_capital} rubles")
-
+def _print_result_line(month_result: float) -> None:
     if month_result < 0:
         print(f"This month, the loss amounted to {abs(month_result)} rubles")
     else:
         print(f"This month, the profit amounted to {month_result} rubles")
 
+
+def _print_stats_body(
+        report_date: str,
+        total_capital: float,
+        month_result: float,
+        month_income: float,
+        month_expenses: float,
+) -> None:
+    print(f"Your statistics as of {report_date}:")
+    print(f"Total capital: {total_capital} rubles")
+    _print_result_line(month_result)
     print(f"Income: {month_income} rubles")
     print(f"Expenses: {month_expenses} rubles")
     print()
-    print("Details (category: amount):")
 
-    for index, category_name in enumerate(sorted(categories.keys()), start=1):
-        print(f"{index}. {category_name}: {categories[category_name]}")
 
+def _get_income_data(target):
+    month, year = _get_target_month_year(target)
+    return _calc_income_total(target, month, year)
+
+
+def _get_expense_data(target):
+    month, year = _get_target_month_year(target)
+    cats = {}
+    exp_total, exp_month = _calc_expense_total(target, month, year, cats)
+    return exp_total, exp_month, cats
+
+
+def _print_stats_only(report_date, income_result, expense_result):
+    _print_stats_body(
+        report_date,
+        income_result[0] - expense_result[0],
+        income_result[1] - expense_result[1],
+        income_result[1],
+        expense_result[1]
+    )
+
+
+def _return_with_cats(cats, report_date):
+    _print_category_details(cats)
     return f"Statistic for {report_date}"
+
+
+def stats_handler(report_date: str) -> str:
+    target = extract_date(report_date)
+    if target is None:
+        return INCORRECT_DATE_MSG
+
+    income_result = _get_income_data(target)
+    expense_result = _get_expense_data(target)
+
+    _print_stats_only(report_date, income_result, expense_result)
+    return _return_with_cats(expense_result[2], report_date)
 
 
 def process_income(command_parts: list[str]) -> None:
@@ -311,7 +374,7 @@ def process_stats(command_parts: list[str]) -> None:
         print(INCORRECT_DATE_MSG)
         return
 
-    stats_handler(date_string)
+    print(stats_handler(date_string))
 
 
 def dispatch_command(command_parts: list[str]) -> None:
