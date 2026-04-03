@@ -120,8 +120,7 @@ def is_valid_category(category_string: str) -> bool:
 def all_categories_str() -> str:
     result = []
     for main, subs in EXPENSE_CATEGORIES.items():
-        for sub in subs:
-            result.append(f"{main}::{sub}")
+        result.extend(f"{main}::{sub}" for sub in subs)
     return "\n".join(result)
 
 
