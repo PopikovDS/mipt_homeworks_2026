@@ -71,31 +71,27 @@ def is_leap_year(year: int) -> bool:
     return year % 400 == 0
 
 
+def _validate_date_parts(day: int, month: int, year: int) -> bool:
+    if not (1 <= month <= MONTHS_NUMBER):
+        return False
+    feb = FEBRUARY_DAYS_COUNT if is_leap_year(year) else FEBRUARY_DAYS_NORMAL
+    month_days = list(MONTH_DAYS)
+    month_days[FEBRUARY_NUMBER - 1] = feb
+    return 1 <= day <= month_days[month - 1]
+
+
 def extract_date(maybe_date: str) -> tuple[int, int, int] | None:
-    if len(maybe_date) != DATE_LEN:
-        return None
-    if maybe_date[2] != "-" or maybe_date[5] != "-":
+    if len(maybe_date) != DATE_LEN or maybe_date[2] != "-" or maybe_date[5] != "-":
         return None
 
-    day_str = maybe_date[:2]
-    month_str = maybe_date[3:5]
-    year_str = maybe_date[6:]
+    day_str, month_str, year_str = maybe_date[:2], maybe_date[3:5], maybe_date[6:]
 
     if not (day_str.isdigit() and month_str.isdigit() and year_str.isdigit()):
         return None
 
-    day = int(day_str)
-    month = int(month_str)
-    year = int(year_str)
+    day, month, year = int(day_str), int(month_str), int(year_str)
 
-    if not (1 <= month <= MONTHS_NUMBER):
-        return None
-
-    feb = FEBRUARY_DAYS_COUNT if is_leap_year(year) else FEBRUARY_DAYS_NORMAL
-    month_days = list(MONTH_DAYS)
-    month_days[FEBRUARY_NUMBER - 1] = feb
-
-    if not (1 <= day <= month_days[month - 1]):
+    if not _validate_date_parts(day, month, year):
         return None
 
     return (day, month, year)
@@ -118,7 +114,7 @@ def is_valid_category(category_string: str) -> bool:
 
 
 def all_categories_str() -> str:
-    result = []
+    result: list[str] = []
     for main, subs in EXPENSE_CATEGORIES.items():
         result.extend(f"{main}::{sub}" for sub in subs)
     return "\n".join(result)
@@ -189,48 +185,64 @@ def cost_categories_handler() -> str:
     return all_categories_str()
 
 
-def stats_handler(report_date: str) -> str:
-    target_date = extract_date(report_date)
-    if target_date is None:
-        return INCORRECT_DATE_MSG
-
+def _process_income_stats(target_date: tuple[int, int, int]) -> tuple[float, float]:
+    total = 0.0
+    month_total = 0.0
     _, target_month, target_year = target_date
-
-    total_capital = 0.0
-    month_income = 0.0
-    month_expenses = 0.0
-    categories: dict[str, float] = {}
 
     for inc in incomes:
         if date_less_or_equal(inc[DATE_KEY], target_date):
-            total_capital += inc[AMOUNT_KEY]
+            total += inc[AMOUNT_KEY]
         same_month = (
             inc[DATE_KEY][MONTH_INDEX] == target_month and
             inc[DATE_KEY][YEAR_INDEX] == target_year
         )
         if same_month:
-            month_income += inc[AMOUNT_KEY]
+            month_total += inc[AMOUNT_KEY]
+
+    return total, month_total
+
+
+def _process_expense_stats(target_date: tuple[int, int, int]) -> tuple[float, float, dict[str, float]]:
+    total = 0.0
+    month_total = 0.0
+    categories: dict[str, float] = {}
+    _, target_month, target_year = target_date
 
     for exp in expenses:
         if date_less_or_equal(exp[DATE_KEY], target_date):
-            total_capital -= exp[AMOUNT_KEY]
+            total += exp[AMOUNT_KEY]
         same_month = (
             exp[DATE_KEY][MONTH_INDEX] == target_month and
             exp[DATE_KEY][YEAR_INDEX] == target_year
         )
         if same_month:
-            month_expenses += exp[AMOUNT_KEY]
+            month_total += exp[AMOUNT_KEY]
             cat_key = exp[SUB_CAT_KEY]
             categories[cat_key] = categories.get(cat_key, 0.0) + exp[AMOUNT_KEY]
 
+    return total, month_total, categories
+
+
+def stats_handler(report_date: str) -> str:
+    target_date = extract_date(report_date)
+    if target_date is None:
+        return INCORRECT_DATE_MSG
+
+    total_income, month_income = _process_income_stats(target_date)
+    total_expense, month_expenses, categories = _process_expense_stats(target_date)
+
+    total_capital = total_income - total_expense
     month_result = month_income - month_expenses
 
     print(f"Your statistics as of {report_date}:")
     print(f"Total capital: {total_capital} rubles")
+
     if month_result < 0:
         print(f"This month, the loss amounted to {abs(month_result)} rubles")
     else:
         print(f"This month, the profit amounted to {month_result} rubles")
+
     print(f"Income: {month_income} rubles")
     print(f"Expenses: {month_expenses} rubles")
     print()
