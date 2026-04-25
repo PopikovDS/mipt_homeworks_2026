@@ -38,9 +38,9 @@ class FIFOPolicy(Policy[K]):
             self._order.append(key)
 
     def get_key_to_evict(self) -> K | None:
-         if len(self._order) > self.capacity:
-             return self._order[0]
-         return None
+        if len(self._order) > self.capacity:
+            return self._order[0]
+        return None
 
     def remove_key(self, key: K) -> None:
         if key in self._order:
@@ -105,7 +105,7 @@ class LFUPolicy(Policy[K]):
         key_to_evict = None
         for key in self._key_counter:
             if key != self._key_end and (
-                    (key_to_evict is None) or (self._key_counter[key_to_evict] > self._key_counter[key])
+                (key_to_evict is None) or (self._key_counter[key_to_evict] > self._key_counter[key])
             ):
                 key_to_evict = key
         return key_to_evict
@@ -148,7 +148,6 @@ class MIPTCache(Cache[K, V]):
     def clear(self) -> None:
         self.storage.clear()
         self.policy.clear()
-
 
 
 class CachedProperty[V]:
