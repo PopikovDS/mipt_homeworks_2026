@@ -101,6 +101,14 @@ class LFUPolicy(Policy[K]):
     def remove_key(self, key: K) -> None:
         self._key_counter.pop(key, None)
 
+    def clear(self) -> None:
+        self._key_counter.clear()
+        self._key_end = None
+
+    @property
+    def has_keys(self) -> bool:
+        return bool(self._key_counter)
+
     def _find_key_to_evict(self) -> K | None:
         key_to_evict = None
         for key in self._key_counter:
@@ -109,14 +117,6 @@ class LFUPolicy(Policy[K]):
             ):
                 key_to_evict = key
         return key_to_evict
-
-    def clear(self) -> None:
-        self._key_counter.clear()
-        self._key_end = None
-
-    @property
-    def has_keys(self) -> bool:
-        return bool(self._key_counter)
 
 
 class MIPTCache(Cache[K, V]):
