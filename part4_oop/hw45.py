@@ -85,11 +85,11 @@ class LRUPolicy(Policy[K]):
 class LFUPolicy(Policy[K]):
     capacity: int = 5
     _key_counter: dict[K, int] = field(default_factory=dict, init=False)
-    _last_key: K | None = field(default=None, init=False)
+    _key_end: K | None = field(default=None, init=False)
 
     def register_access(self, key: K) -> None:
         if key not in self._key_counter:
-            self._last_key = key
+            self._key_end = key
         self._key_counter.setdefault(key, 0)
         self._key_counter[key] += 1
 
@@ -101,9 +101,18 @@ class LFUPolicy(Policy[K]):
     def remove_key(self, key: K) -> None:
         self._key_counter.pop(key, None)
 
+    def _find_key_to_evict(self) -> K | None:
+        key_to_evict = None
+        for key in self._key_counter:
+            if key != self._key_end and (
+                    (key_to_evict is None) or (self._key_counter[key_to_evict] > self._key_counter[key])
+            ):
+                key_to_evict = key
+        return key_to_evict
+
     def clear(self) -> None:
         self._key_counter.clear()
-        self._last_key = None
+        self._key_end = None
 
     @property
     def has_keys(self) -> bool:
@@ -118,7 +127,7 @@ class MIPTCache(Cache[K, V]):
     def set(self, key: K, value: V) -> None:
         self.storage.set(key, value)
         self.policy.register_access(key)
-        key_to_evict = self.policy.get_key_evict()
+        key_to_evict = self.policy.get_key_to_evict()
         if key_to_evict is not None:
             self.storage.remove(key_to_evict)
             self.policy.remove_key(key_to_evict)
