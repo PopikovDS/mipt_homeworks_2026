@@ -27,7 +27,6 @@ class BreakerError(Exception):
         super().__init__(TOO_MUCH)
         self.func_name = func_name
         self.block_time = block_time
-        
 
 
 @dataclass
