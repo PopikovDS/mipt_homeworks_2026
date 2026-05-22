@@ -1,0 +1,39 @@
+# Виртуальное окружение
+venv/
+env/
+.venv/
+venv/
+
+# Секреты и конфиги
+.env
+config.yaml
+*.key
+*secret*
+
+# Кэш Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Тесты
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# Линтеры
+.mypy_cache/
+.ruff_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Логи
+*.log
+.DS_Store
+Thumbs.db
