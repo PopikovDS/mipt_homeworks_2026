@@ -22,7 +22,7 @@
 
 ##  Установка
 
-### 1. Установите Ollama
+### 1. Установите Ollama и зависимости
 
 Скачайте и установите Ollama с официального сайта:
 
@@ -53,6 +53,12 @@ ollama serve
 Если после этой введенной команды появляется
 
 ```Error ... «Only one usage of each socket address»```, то всё отлично! Поздравляю, мы запустили Ollama
+
+Установите зависимости из requirements.txt:
+```bash
+pip install -r final_project/requirements.txt
+```
+
 
 ### 2. Скачайте языковую модель
 
