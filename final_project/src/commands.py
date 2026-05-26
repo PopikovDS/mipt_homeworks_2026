@@ -5,6 +5,7 @@ from .chat import Chat
 
 
 class CommandHandler:
+
     def __init__(self, chat: Chat) -> None:
         self.chat = chat
 
@@ -30,9 +31,9 @@ class CommandHandler:
 
         mode_names = {
             'paragraph': f'по абзацам (по {value} абзаца(ев) на чанк)',
-            'length': f'по символам ({value} символов на чанк)',
+            'length': f'по символам ({value} символов на чанк)'
         }
-        print(f'\nРежим: {mode_names.get(mode, "неизвестный")}')
+        print(f"\nРежим: {mode_names.get(mode, 'неизвестный')}")
         if auto_mode:
             print('Автоматический режим: чанки будут обработаны без ожидания Enter\n')
 
@@ -50,7 +51,7 @@ class CommandHandler:
                 return True
 
         print('\nЧто нужно сделать для каждого фрагмента?')
-        print("   Пример: 'Кратко перескажи текст' или 'Переведи на английский'")
+        print('   Пример: \'Кратко перескажи текст\' или \'Переведи на английский\'')
         user_prompt = input('→ ').strip()
 
         if not user_prompt:
@@ -80,9 +81,9 @@ class CommandHandler:
         print(f'Файл разбит на {len(chunks)} частей\n')
 
         for i, chunk in enumerate(chunks, 1):
-            print(f'\n{"─" * 60}')
+            print(f"\n{'─' * 60}")
             print(f'Чанк {i}/{len(chunks)}')
-            print(f'{"─" * 60}')
+            print(f"{'─' * 60}")
 
             preview = chunk[:200] + '...' if len(chunk) > 200 else chunk
             print(f'Содержимое чанка:\n{preview}\n')

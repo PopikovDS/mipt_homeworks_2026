@@ -3,8 +3,12 @@ from typing import List, Dict, Optional
 
 
 class LLMClient:
+
     def __init__(self, api_key: str, api_host: str, temperature: float = 0.7) -> None:
-        self.client = OpenAI(base_url=api_host, api_key=api_key)
+        self.client = OpenAI(
+            base_url=api_host,
+            api_key=api_key
+        )
         self.temperature = temperature
 
         if 'openrouter' in api_host:
@@ -16,7 +20,11 @@ class LLMClient:
         else:
             self.model = 'gpt-3.5-turbo'
 
-    def send_message(self, messages: List[Dict[str, str]], stream: bool = False) -> Optional[str]:
+    def send_message(
+            self,
+            messages: List[Dict[str, str]],
+            stream: bool = False
+    ) -> Optional[str]:
 
         try:
             if stream:
@@ -28,18 +36,23 @@ class LLMClient:
 
     def _send_sync(self, messages: List[Dict[str, str]]) -> str:
         response = self.client.chat.completions.create(
-            model=self.model, messages=messages, temperature=self.temperature
+            model=self.model,
+            messages=messages,
+            temperature=self.temperature
         )
         return str(response.choices[0].message.content)
 
     def _send_streaming(self, messages: List[Dict[str, str]]) -> str:
         full_response: str = ''
         stream = self.client.chat.completions.create(
-            model=self.model, messages=messages, temperature=self.temperature, stream=True
+            model=self.model,
+            messages=messages,
+            temperature=self.temperature,
+            stream=True
         )
 
         for chunk in stream:
-            if chunk.choices[0].delta.content:
+            if chunk.choices and chunk.choices[0].delta.content:
                 content = chunk.choices[0].delta.content
                 print(content, end='', flush=True)
                 full_response += content
