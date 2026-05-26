@@ -152,5 +152,5 @@ jobs:
       - run: pip install ruff mypy pyyaml python-dotenv openai pytest types-PyYAML
       - run: cd final_project && ruff check --config ruff.toml .
       - run: cd final_project && ruff format --config ruff.toml . || true
-      - run: cd final_project && mypy --ignore-missing-imports .
+      - run: cd final_project && mypy --ignore-missing-imports --explicit-package-bases .
       - run: cd final_project && pytest tests/ -v
