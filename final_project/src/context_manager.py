@@ -2,7 +2,6 @@ from typing import List, Dict, Optional
 
 
 class ContextManager:
-
     def __init__(self, limit_messages: Optional[int], limit_chars: Optional[int]) -> None:
         self.messages: List[Dict[str, str]] = []
         self.limit_messages = limit_messages
@@ -29,11 +28,11 @@ class ContextManager:
                 system = self.messages[0]
                 others = self.messages[1:]
                 if len(others) > self.limit_messages:
-                    others = others[-self.limit_messages:]
+                    others = others[-self.limit_messages :]
                 self.messages = [system] + others
             else:
                 if len(self.messages) > self.limit_messages:
-                    self.messages = self.messages[-self.limit_messages:]
+                    self.messages = self.messages[-self.limit_messages :]
 
         if self.limit_chars:
             total_chars = sum(len(m.get('content', '')) for m in self.messages)
@@ -49,9 +48,7 @@ class ContextManager:
 
             for _i, msg in enumerate(self.messages):
                 if len(msg.get('content', '')) > self.limit_chars:
-                    msg['content'] = (
-                        msg['content'][:self.limit_chars] + '...[обрезано]'
-                    )
+                    msg['content'] = msg['content'][: self.limit_chars] + '...[обрезано]'
 
     def get_messages(self) -> List[Dict[str, str]]:
         return self.messages.copy()
@@ -65,5 +62,5 @@ class ContextManager:
     def get_stats(self) -> Dict[str, int]:
         return {
             'message_count': len(self.messages),
-            'total_chars': sum(len(m.get('content', '')) for m in self.messages)
+            'total_chars': sum(len(m.get('content', '')) for m in self.messages),
         }

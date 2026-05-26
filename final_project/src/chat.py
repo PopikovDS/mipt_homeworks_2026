@@ -22,10 +22,7 @@ class Chat:
         self.context.add_message('user', processed_input)
 
         try:
-            response = self.llm.send_message(
-                self.context.get_messages(),
-                stream=stream
-            )
+            response = self.llm.send_message(self.context.get_messages(), stream=stream)
 
             if response:
                 self.context.add_message('assistant', response)

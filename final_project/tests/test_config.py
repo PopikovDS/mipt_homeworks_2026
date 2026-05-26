@@ -5,10 +5,7 @@ from src.config import Config
 
 
 def test_config_load_from_env() -> None:
-    with patch.dict(os.environ, {
-        'API_KEY': 'test-key',
-        'API_HOST': 'https://test.com/v1'
-    }):
+    with patch.dict(os.environ, {'API_KEY': 'test-key', 'API_HOST': 'https://test.com/v1'}):
         with patch('os.path.exists', return_value=False):
             config = Config.load()
             assert config.api_key == 'test-key'
@@ -23,18 +20,18 @@ def test_config_missing_key() -> None:
 
 
 def test_config_with_yaml() -> None:
-    with patch.dict(os.environ, {
-        'API_KEY': 'test-key',
-        'API_HOST': 'https://test.com/v1'
-    }):
+    with patch.dict(os.environ, {'API_KEY': 'test-key', 'API_HOST': 'https://test.com/v1'}):
         with patch('os.path.exists', return_value=True):
             with patch('builtins.open', mock_open()):
-                with patch('yaml.safe_load', return_value={
-                    'limit_messages': 10,
-                    'limit_chars': 1000,
-                    'temperature': 0.5,
-                    'system_prompt': 'Test prompt'
-                }):
+                with patch(
+                    'yaml.safe_load',
+                    return_value={
+                        'limit_messages': 10,
+                        'limit_chars': 1000,
+                        'temperature': 0.5,
+                        'system_prompt': 'Test prompt',
+                    },
+                ):
                     config = Config.load()
                     assert config.limit_messages == 10
                     assert config.limit_chars == 1000

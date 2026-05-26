@@ -56,5 +56,5 @@ class Config:
             limit_messages=yaml_config.get('limit_messages'),
             limit_chars=yaml_config.get('limit_chars'),
             temperature=float(temperature),
-            system_prompt=yaml_config.get('system_prompt')
+            system_prompt=yaml_config.get('system_prompt'),
         )

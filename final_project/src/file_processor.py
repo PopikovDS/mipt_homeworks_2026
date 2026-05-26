@@ -4,7 +4,6 @@ from typing import List, Tuple
 
 
 class FileProcessor:
-
     MAX_FILE_SIZE: int = 5 * 1024 * 1024
 
     @classmethod
@@ -50,7 +49,7 @@ class FileProcessor:
 
         chunks: List[str] = []
         for i in range(0, len(paras), paragraphs):
-            chunk: str = '\n\n'.join(paras[i:i + paragraphs])
+            chunk: str = '\n\n'.join(paras[i : i + paragraphs])
             chunks.append(chunk)
 
         return chunks
@@ -65,7 +64,7 @@ class FileProcessor:
 
         chunks: List[str] = []
         for i in range(0, len(content), chunk_len):
-            chunks.append(content[i:i + chunk_len])
+            chunks.append(content[i : i + chunk_len])
 
         return chunks
 

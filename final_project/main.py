@@ -47,8 +47,8 @@ def main() -> None:
 
     print('Текущие настройки:')
     print(f'   • Хост API: {config.api_host}')
-    print(f"   • Лимит сообщений: {config.limit_messages or '∞'}")
-    print(f"   • Лимит символов: {config.limit_chars or '∞'}")
+    print(f'   • Лимит сообщений: {config.limit_messages or "∞"}')
+    print(f'   • Лимит символов: {config.limit_chars or "∞"}')
     print(f'   • Температура: {config.temperature}')
     print()
 
@@ -76,8 +76,8 @@ def main() -> None:
                 stats = chat.get_stats()
                 if stats['message_count'] > 5:
                     stats_msg = (
-                        f"\n[Статистика: {stats['message_count']} сообщений, "
-                        f"{stats['total_chars']} символов]"
+                        f'\n[Статистика: {stats["message_count"]} сообщений, '
+                        f'{stats["total_chars"]} символов]'
                     )
                     print(stats_msg)
 
