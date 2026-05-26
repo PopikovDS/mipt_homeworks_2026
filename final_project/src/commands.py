@@ -91,13 +91,13 @@ class CommandHandler:
 
             if auto_mode:
                 print('Отправляю запрос...\n')
-                response: str | None = self.chat.send_message(message)
+                response = self.chat.send_message(message)
                 if response:
                     print(f'Ответ:\n{response}')
             else:
                 input('⏎ Нажмите Enter для обработки этого чанка...')
                 print('\nОтправляю запрос...\n')
-                response: str | None = self.chat.send_message(message)
+                response = self.chat.send_message(message)
                 if response:
                     print(f'Ответ:\n{response}')
 

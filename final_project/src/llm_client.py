@@ -37,12 +37,10 @@ class LLMClient:
         stream = self.client.chat.completions.create(
             model=self.model, messages=messages, temperature=self.temperature, stream=True
         )
-
         for chunk in stream:
             if chunk.choices and chunk.choices[0].delta.content:
                 content = chunk.choices[0].delta.content
                 print(content, end='', flush=True)
                 full_response += content
-
         print()
         return full_response

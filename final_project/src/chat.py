@@ -43,4 +43,5 @@ class Chat:
         os.system('cls' if os.name == 'nt' else 'clear')
 
     def get_stats(self) -> Dict[str, int]:
-        return self.context.get_stats()
+        stats = self.context.get_stats()
+        return stats
