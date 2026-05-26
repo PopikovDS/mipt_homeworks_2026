@@ -18,12 +18,8 @@ on:
         type: boolean
   push:
     branches: [main, master]
-    paths-ignore:
-      - 'final_project/**'
   pull_request:
     branches: [main, master]
-    paths-ignore:
-      - 'final_project/**'
 
 jobs:
   detect-changes:
@@ -145,3 +141,14 @@ jobs:
           else
             echo "No tests directory found in ${{ matrix.folder }}"
           fi
+
+  final-project-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install ruff mypy
+      - run: cd final_project && ruff check --config ruff.toml .
+      - run: cd final_project && mypy .
