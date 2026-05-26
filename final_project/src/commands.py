@@ -1,5 +1,5 @@
-import os
 from __future__ import annotations
+import os
 from .file_processor import FileProcessor
 from .chat import Chat
 
@@ -33,17 +33,17 @@ class CommandHandler:
             'paragraph': f'по абзацам (по {value} абзаца(ев) на чанк)',
             'length': f'по символам ({value} символов на чанк)'
         }
-        print(f'\nРежим: {mode_names.get(mode, 'неизвестный')}')
+        print(f"\nРежим: {mode_names.get(mode, 'неизвестный')}")
         if auto_mode:
             print('Автоматический режим: чанки будут обработаны без ожидания Enter\n')
 
         filepath = input('Введите путь до файла: ').strip()
 
         if not os.path.exists(filepath):
-            print(f'Файл {filepath} не найден!')
+            print(f"Файл '{filepath}' не найден!")
             return True
 
-        if os.path.getsize(filepath) > 50 * 1024 * 1024:  # 50 MB
+        if os.path.getsize(filepath) > 50 * 1024 * 1024:
             size_mb = os.path.getsize(filepath) / 1024 / 1024
             print(f'Файл очень большой ({size_mb:.1f} MB)')
             response = input('Продолжить? (Y/N): ').strip().lower()
@@ -72,15 +72,18 @@ class CommandHandler:
 
         error_msg = 'Ошибка'
         if not chunks or (len(chunks) == 1 and chunks[0].startswith(error_msg)):
-            print(f'{chunks[0] if chunks else 'Файл пуст или не удалось прочитать'}')
+            if chunks:
+                print(f'{chunks[0]}')
+            else:
+                print('Файл пуст или не удалось прочитать')
             return True
 
         print(f'Файл разбит на {len(chunks)} частей\n')
 
         for i, chunk in enumerate(chunks, 1):
-            print(f'\n{'─' * 60}')
+            print(f"\n{'─' * 60}")
             print(f'Чанк {i}/{len(chunks)}')
-            print(f'{'─' * 60}')
+            print(f"{'─' * 60}")
 
             preview = chunk[:200] + '...' if len(chunk) > 200 else chunk
             print(f'Содержимое чанка:\n{preview}\n')

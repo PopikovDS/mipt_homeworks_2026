@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 class FileProcessor:
 
-    MAX_FILE_SIZE: int = 5 * 1024 * 1024  # 5 MB
+    MAX_FILE_SIZE: int = 5 * 1024 * 1024
 
     @classmethod
     def process_mentions(cls, text: str) -> str:
@@ -15,10 +15,10 @@ class FileProcessor:
             filepath: str = match.group(1).strip()
 
             if not os.path.exists(filepath):
-                return f'\n[Ошибка: файл {filepath} не найден]\n'
+                return f"\n[Ошибка: файл '{filepath}' не найден]\n"
 
             if os.path.getsize(filepath) > cls.MAX_FILE_SIZE:
-                return f'\n[Ошибка: файл {filepath} превышает 5MB]\n'
+                return f"\n[Ошибка: файл '{filepath}' превышает 5MB]\n"
 
             try:
                 with open(filepath, 'r', encoding='utf-8') as f:
@@ -29,9 +29,9 @@ class FileProcessor:
 
                 return f'\n--- {filepath} ---\n{content}\n--- конец файла ---\n'
             except UnicodeDecodeError:
-                return f'\n[Ошибка: файл {filepath} не является текстовым]\n'
+                return f"\n[Ошибка: файл '{filepath}' не является текстовым]\n"
             except Exception as e:
-                return f'\n[Ошибка при чтении {filepath}: {e}]\n'
+                return f"\n[Ошибка при чтении '{filepath}': {e}]\n"
 
         return re.sub(pattern, replace_file, text)
 
