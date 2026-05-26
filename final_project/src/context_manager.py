@@ -3,18 +3,18 @@ from typing import List, Dict, Optional
 
 class ContextManager:
 
-    def __init__(self, limit_messages: Optional[int], limit_chars: Optional[int]):
+    def __init__(self, limit_messages: Optional[int], limit_chars: Optional[int]) -> None:
         self.messages: List[Dict[str, str]] = []
         self.limit_messages = limit_messages
         self.limit_chars = limit_chars
         self._system_message: Optional[Dict[str, str]] = None
 
     def set_system_prompt(self, system_prompt: str) -> None:
-        self._system_message = {"role": "system", "content": system_prompt}
+        self._system_message = {'role': 'system', 'content': system_prompt}
         self._rebuild_messages()
 
     def add_message(self, role: str, content: str) -> None:
-        self.messages.append({"role": role, "content": content})
+        self.messages.append({'role': role, 'content': content})
         self._apply_limits()
 
     def _rebuild_messages(self) -> None:
@@ -47,9 +47,11 @@ class ContextManager:
                     removed = self.messages.pop(0)
                 total_chars -= len(removed.get('content', ''))
 
-            for i, msg in enumerate(self.messages):
+            for _i, msg in enumerate(self.messages):
                 if len(msg.get('content', '')) > self.limit_chars:
-                    msg['content'] = msg['content'][:self.limit_chars] + "...[обрезано]"
+                    msg['content'] = (
+                        msg['content'][:self.limit_chars] + '...[обрезано]'
+                    )
 
     def get_messages(self) -> List[Dict[str, str]]:
         return self.messages.copy()

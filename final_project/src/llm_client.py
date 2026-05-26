@@ -4,7 +4,7 @@ from typing import List, Dict, Optional
 
 class LLMClient:
 
-    def __init__(self, api_key: str, api_host: str, temperature: float = 0.7):
+    def __init__(self, api_key: str, api_host: str, temperature: float = 0.7) -> None:
         self.client = OpenAI(
             base_url=api_host,
             api_key=api_key
@@ -12,13 +12,13 @@ class LLMClient:
         self.temperature = temperature
 
         if 'openrouter' in api_host:
-            self.model = "openrouter/meta-llama/llama-3.3-70b-instruct:free"
+            self.model: str = 'openrouter/meta-llama/llama-3.3-70b-instruct:free'
         elif 'openai' in api_host:
-            self.model = "gpt-3.5-turbo"
+            self.model = 'gpt-3.5-turbo'
         elif 'localhost' in api_host:
-            self.model = "gemma3:270m"
+            self.model = 'gemma3:270m'
         else:
-            self.model = "gpt-3.5-turbo"
+            self.model = 'gpt-3.5-turbo'
 
     def send_message(
             self,
@@ -32,7 +32,7 @@ class LLMClient:
             else:
                 return self._send_sync(messages)
         except Exception as e:
-            raise Exception(f"Ошибка при общении с LLM: {e}")
+            raise Exception(f'Ошибка при общении с LLM: {e}') from e
 
     def _send_sync(self, messages: List[Dict[str, str]]) -> str:
         response = self.client.chat.completions.create(
@@ -40,10 +40,10 @@ class LLMClient:
             messages=messages,
             temperature=self.temperature
         )
-        return response.choices[0].message.content
+        return str(response.choices[0].message.content)
 
     def _send_streaming(self, messages: List[Dict[str, str]]) -> str:
-        full_response = ""
+        full_response: str = ''
         stream = self.client.chat.completions.create(
             model=self.model,
             messages=messages,

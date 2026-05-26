@@ -1,11 +1,12 @@
 import os
-from src.file_processor import FileProcessor
-from src.chat import Chat
+from __future__ import annotations
+from .file_processor import FileProcessor
+from .chat import Chat
 
 
 class CommandHandler:
 
-    def __init__(self, chat: Chat):
+    def __init__(self, chat: Chat) -> None:
         self.chat = chat
 
     def handle(self, command: str) -> bool:
@@ -18,7 +19,7 @@ class CommandHandler:
         return False
 
     def _quit(self) -> bool:
-        print("До свидания!")
+        print('До свидания!')
         return True
 
     def _reset(self) -> bool:
@@ -29,73 +30,75 @@ class CommandHandler:
         mode, value, auto_mode = FileProcessor.parse_chunk_command(command)
 
         mode_names = {
-            'paragraph': f"по абзацам (по {value} абзаца(ев) на чанк)",
-            'length': f"по символам ({value} символов на чанк)"
+            'paragraph': f'по абзацам (по {value} абзаца(ев) на чанк)',
+            'length': f'по символам ({value} символов на чанк)'
         }
-        print(f"\nРежим: {mode_names.get(mode, 'неизвестный')}")
+        print(f'\nРежим: {mode_names.get(mode, 'неизвестный')}')
         if auto_mode:
-            print("Автоматический режим: чанки будут обработаны без ожидания Enter\n")
+            print('Автоматический режим: чанки будут обработаны без ожидания Enter\n')
 
-        filepath = input("Введите путь до файла: ").strip()
+        filepath = input('Введите путь до файла: ').strip()
 
         if not os.path.exists(filepath):
-            print(f"Файл '{filepath}' не найден!")
+            print(f'Файл {filepath} не найден!')
             return True
 
         if os.path.getsize(filepath) > 50 * 1024 * 1024:  # 50 MB
-            print(f"Файл очень большой ({os.path.getsize(filepath) / 1024 / 1024:.1f} MB)")
-            response = input("Продолжить? (Y/N): ").strip().lower()
-            if (response != 'y') or (response != 'Y'):
+            size_mb = os.path.getsize(filepath) / 1024 / 1024
+            print(f'Файл очень большой ({size_mb:.1f} MB)')
+            response = input('Продолжить? (Y/N): ').strip().lower()
+            if response != 'y':
                 return True
 
-        print("\nЧто нужно сделать для каждого фрагмента?")
-        print("   Пример: 'Кратко перескажи текст' или 'Переведи на английский'")
-        user_prompt = input("→ ").strip()
+        print('\nЧто нужно сделать для каждого фрагмента?')
+        print('   Пример: \'Кратко перескажи текст\' или \'Переведи на английский\'')
+        user_prompt = input('→ ').strip()
 
         if not user_prompt:
-            print("Промпт не может быть пустым!")
+            print('Промпт не может быть пустым!')
             return True
 
-        print("\nНачинаю обработку...\n")
-        print("=" * 60)
+        print('\nНачинаю обработку...\n')
+        print('=' * 60)
 
         try:
             if mode == 'paragraph':
-                chunks = FileProcessor.chunk_by_paragraphs(filepath, value)
+                chunks = FileProcessor.chunk_by_paragraphs(filepath, value if value else 1)
             else:
-                chunks = FileProcessor.chunk_by_length(filepath, value)
+                chunks = FileProcessor.chunk_by_length(filepath, value if value else 150)
         except Exception as e:
-            print(f"Ошибка при чтении файла: {e}")
+            print(f'Ошибка при чтении файла: {e}')
             return True
 
-        if not chunks or (len(chunks) == 1 and chunks[0].startswith("Ошибка")):
-            print(f"{chunks[0] if chunks else 'Файл пуст или не удалось прочитать'}")
+        error_msg = 'Ошибка'
+        if not chunks or (len(chunks) == 1 and chunks[0].startswith(error_msg)):
+            print(f'{chunks[0] if chunks else 'Файл пуст или не удалось прочитать'}')
             return True
 
-        print(f"Файл разбит на {len(chunks)} калачьянков\n")
+        print(f'Файл разбит на {len(chunks)} частей\n')
 
         for i, chunk in enumerate(chunks, 1):
-            print(f"\n{'─' * 60}")
-            print(f"Чанк {i}/{len(chunks)}")
-            print(f"{'─' * 60}")
+            print(f'\n{'─' * 60}')
+            print(f'Чанк {i}/{len(chunks)}')
+            print(f'{'─' * 60}')
 
-            preview = chunk[:200] + "..." if len(chunk) > 200 else chunk
-            print(f"Содержимое чанка:\n{preview}\n")
+            preview = chunk[:200] + '...' if len(chunk) > 200 else chunk
+            print(f'Содержимое чанка:\n{preview}\n')
 
-            message = f"{user_prompt}\n\nТекст для обработки:\n{chunk}"
+            message = f'{user_prompt}\n\nТекст для обработки:\n{chunk}'
 
             if auto_mode:
-                print("Отправляю запрос на базу врага...\n")
+                print('Отправляю запрос...\n')
                 response = self.chat.send_message(message)
                 if response:
-                    print(f"Ответ:\n{response}")
+                    print(f'Ответ:\n{response}')
             else:
-                input("⏎ Нажмите Enter для обработки этого чанка...")
-                print("\nОтправляю запрос...\n")
+                input('⏎ Нажмите Enter для обработки этого чанка...')
+                print('\nОтправляю запрос...\n')
                 response = self.chat.send_message(message)
                 if response:
-                    print(f"Ответ:\n{response}")
+                    print(f'Ответ:\n{response}')
 
-        print("\n" + "=" * 60)
-        print("Обработка файла завершена!")
+        print('\n' + '=' * 60)
+        print('Обработка файла завершена!')
         return True
