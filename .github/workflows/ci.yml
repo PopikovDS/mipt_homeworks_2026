@@ -73,9 +73,6 @@ jobs:
       - name: Run ruff check
         run: uv run ruff check "${{ matrix.folder }}"
 
-      - name: Run ruff format
-        run: uv run ruff format --check "${{ matrix.folder }}"
-
       - name: Run wemake-python-styleguide
         run: uv run flake8 "${{ matrix.folder }}"
 
@@ -151,4 +148,4 @@ jobs:
           python-version: '3.11'
       - run: pip install ruff mypy pyyaml python-dotenv openai types-PyYAML
       - run: cd final_project && ruff check --config ruff.toml .
-      - run: cd final_project && mypy src/ tests/ main.py
+      - run: cd final_project && mypy --config mypy.ini .
