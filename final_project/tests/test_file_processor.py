@@ -1,6 +1,10 @@
+import sys
+from pathlib import Path
 from unittest.mock import patch, mock_open
-from src.file_processor import FileProcessor
 
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from src.file_processor import FileProcessor
 
 def test_process_mentions_file_not_found() -> None:
     text = 'Check @::nonexistent.txt::'

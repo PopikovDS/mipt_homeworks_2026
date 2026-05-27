@@ -94,12 +94,16 @@ class CommandHandler:
                 response = self.chat.send_message(message)
                 if response:
                     print(f'Ответ:\n{response}')
+                else:
+                    print('Не удалось получить ответ от модели')
             else:
                 input('Нажмите Enter для обработки этого чанка...')
                 print('\nОтправляю запрос...\n')
                 response = self.chat.send_message(message)
                 if response:
                     print(f'Ответ:\n{response}')
+                else:
+                    print('Не удалось получить ответ от модели')
 
         print('\n' + '=' * 60)
         print('Обработка файла завершена!')

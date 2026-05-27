@@ -1,5 +1,9 @@
-from src.context_manager import ContextManager
+import sys
+from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from src.context_manager import ContextManager
 
 def test_add_message() -> None:
     cm = ContextManager(limit_messages=None, limit_chars=None)
