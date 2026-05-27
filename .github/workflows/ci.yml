@@ -71,7 +71,7 @@ jobs:
         run: |
           cd ${{ matrix.folder }}
           uv pip install -r requirements.txt
-          uv sync --group lint --group test
+          uv pip install ruff==0.15.9 pytest pytest-cov mypy types-PyYAML types-requests
 
       - name: Install specific ruff version
         run: uv pip install ruff==0.15.9
@@ -108,7 +108,7 @@ jobs:
         run: |
           cd ${{ matrix.folder }}
           uv pip install -r requirements.txt
-          uv sync --group lint --group test
+          uv pip install mypy types-PyYAML types-requests pytest pytest-cov ruff
 
       - name: Run mypy
         run: uv run mypy "${{ matrix.folder }}" || true
@@ -144,7 +144,7 @@ jobs:
         run: |
           cd ${{ matrix.folder }}
           uv pip install -r requirements.txt
-          uv sync --group lint --group test
+          uv pip install pytest pytest-cov mypy types-PyYAML types-requests ruff
 
       - name: Run pytest
         run: |
