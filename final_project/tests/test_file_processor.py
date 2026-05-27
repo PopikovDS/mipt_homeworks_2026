@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.file_processor import FileProcessor
 
+
 def test_process_mentions_file_not_found() -> None:
     text = 'Check @::nonexistent.txt::'
     result = FileProcessor.process_mentions(text)
