@@ -47,8 +47,8 @@ def main() -> None:
 
     print('Текущие настройки:')
     print(f'   • Хост API: {config.api_host}')
-    print(f'   • Лимит сообщений: {config.limit_messages or "∞"}')
-    print(f'   • Лимит символов: {config.limit_chars or "∞"}')
+    print(f'   • Лимит сообщений: {config.limit_messages or "infinity"}')
+    print(f'   • Лимит символов: {config.limit_chars or "infinity"}')
     print(f'   • Температура: {config.temperature}')
     print()
 
@@ -56,7 +56,7 @@ def main() -> None:
 
     while True:
         try:
-            user_input = input('👤 Вы: ').strip()
+            user_input = input('Вы:').strip()
 
             if not user_input:
                 continue

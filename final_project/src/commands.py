@@ -95,7 +95,7 @@ class CommandHandler:
                 if response:
                     print(f'Ответ:\n{response}')
             else:
-                input('⏎ Нажмите Enter для обработки этого чанка...')
+                input('Нажмите Enter для обработки этого чанка...')
                 print('\nОтправляю запрос...\n')
                 response = self.chat.send_message(message)
                 if response:
